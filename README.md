@@ -9,6 +9,6 @@ a bunch more to come...
 <br>
 12/30/2024 - Completely re-wrote this now with a data input tab that will retain the last info you entered to make the other tabs easier to use.
 saved it as evtools2.py for now.
-
+<br>
 ![Alt text](https://github.com/Gobytego/EVTools/blob/main/evtools_range.png)
 ![Alt text](https://github.com/Gobytego/EVTools/blob/main/evtools_time.png)
