@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EV Tools</title>
+    <style>
+        body {
+            font-family: Verdana;
+            margin: 9px;
+            background-color: #222428;
+            color: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            text-align: center;
+            width: 90%;
+            max-width: 400px;
+        }
+
+        a {
+            color: white;
+        }
+        p {
+            color: white;
+        }
+        .notice {
+            font-size: 0.7em;
+            margin-bottom: 15px;
+        }
+        #timer {
+            font-size: 2.5em;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        input[type="text"] {
+            background-color: #333;
+            color: white;
+            border: 1px solid #555;
+            padding: 5px;
+            margin: 5px 0;
+            width: calc(100% - 12px);
+            box-sizing: border-box;
+            max-width: 250px;
+            margin: 5px auto;
+            display: block;
+        }
+
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            cursor: pointer;
+            margin-top: 10px;
+            display: block;
+            margin: 0 auto;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                max-width: 95%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <img src="img/logo2.png" height="120" alt="" />
+        <br>
+        <h2>EV Tools</h2>
+        <p>Created by Adam Singer of Gobytego</p>
+
+        <div>
+            Battery Capacity (Ah): <input type="text" id="battery_capacity"><br>
+            Motor Wattage (W): <input type="text" id="motor_wattage"><br>
+            Battery Voltage (V): <input type="text" id="battery_voltage"><br>
+            Charge Amperage (A): <input type="text" id="charger_amp"><br>
+            Weight W/ Gear (lbs): <input type="text" id="rider_weight"><br>
+            Battery Remaining (%): <input type="text" id="battery_percent"><br>
+            Current Temperature (°F): <input type="text" id="temperature"><br> <br>
+
+            Estimated Range (miles): <span id="estimated_range"></span><br>
+            Adjusted Range for Temperature (miles): <span id="adjusted_range"></span><br>
+            Charge Time (hours): <span id="charge_time"></span><br>
+            <br>
+            <button onclick="calculateAll()">Calculate</button>
+        </div>
+
+        <script>
+            function calculateAll() {
+                calculateRange();
+                calculateCharge();
+            }
+
+            function calculateCharge() {
+                const capacity = parseFloat(document.getElementById("battery_capacity").value);
+                const remainingBattery = parseFloat(document.getElementById("battery_percent").value);
+                const chargerAmp = parseFloat(document.getElementById("charger_amp").value);
+
+                if (0 <= remainingBattery && remainingBattery <= 100 && chargerAmp > 0 && capacity > 0) {
+                    const chargePercentage = 100 - remainingBattery;
+                    const chargeTime = (chargePercentage * capacity) / (chargerAmp * 100);
+                    document.getElementById("charge_time").textContent = chargeTime.toFixed(2);
+                } else {
+                    document.getElementById("charge_time").textContent = "Invalid input";
+                }
+            }
+
+            function calculateRange() {
+                const batteryCapacity = parseFloat(document.getElementById("battery_capacity").value);
+                const motorPower = parseFloat(document.getElementById("motor_wattage").value);
+                const batteryVoltage = parseFloat(document.getElementById("battery_voltage").value);
+                const riderWeight = parseFloat(document.getElementById("rider_weight").value);
+                const batteryPercent = parseFloat(document.getElementById("battery_percent").value);
+                const temperature = parseFloat(document.getElementById("temperature").value);
+
+                const baseWattsPerMile = 19.95;
+                const weightFactor = 1 + (riderWeight / 700);
+                const motorPowerFactor = 1 + (motorPower / 2000);
+                let wattsPerMile = baseWattsPerMile * weightFactor * motorPowerFactor;
+
+                const totalEnergyWh = batteryCapacity * batteryVoltage;
+                const remainingEnergyWh = totalEnergyWh * (batteryPercent / 100);
+
+                // Temperature Adjustment
+                let adjustedRangePercentage;
+                const optimalTemp = 68;
+                const maxIncreaseTemp = 70;
+                const optimalPercentage = 1.15;
+                const coldPercentage = 0.54;
+
+                if (temperature >= maxIncreaseTemp) {
+                    adjustedRangePercentage = optimalPercentage;
+                } else if (temperature <= 5) {
+                    adjustedRangePercentage = coldPercentage;
+                } else if (temperature > optimalTemp) {
+                    adjustedRangePercentage = optimalPercentage - (maxIncreaseTemp - temperature) * (optimalPercentage - 1) / (maxIncreaseTemp - optimalTemp);
+                } else {
+                    adjustedRangePercentage = optimalPercentage - (optimalTemp - temperature) * (optimalPercentage - coldPercentage) / (optimalTemp - 5);
+                }
+
+                // Apply temperature adjustment to wattsPerMile
+                wattsPerMile = wattsPerMile / adjustedRangePercentage;
+
+                // Calculate adjusted miles
+                let adjustedMiles = remainingEnergyWh / wattsPerMile;
+
+                // Calculate estimated miles (without temp adjustment)
+                let estimatedMiles = remainingEnergyWh / (baseWattsPerMile * weightFactor * motorPowerFactor);
+
+                document.getElementById("estimated_range").textContent = estimatedMiles.toFixed(2);
+                document.getElementById("adjusted_range").textContent = adjustedMiles.toFixed(2);
+            }
+        </script>
+    </div>
+</body>
+</html>
