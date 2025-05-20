@@ -1,5 +1,7 @@
 # EVTools
 
+OLD USE BATTERYUTILS INSTEAD
+
 A set of Battery tools for e-bikes/scooters
 This includes:
   Battery range Calculator to get a estimate of how many miles you can ride on the remaining charge you have left on your battery.
